@@ -3,6 +3,7 @@ import type { RaindropAPI } from "./api";
 import type RaindropPlugin from "./main";
 import Renderer from "./renderer";
 import truncate from "truncate-utf8-bytes";
+import { extractArticleMarkdown } from "./article";
 import type {
 	BookmarkFile,
 	BookmarkFileFrontMatter,
@@ -151,7 +152,10 @@ export default class RaindropSync {
 		}
 
 		const bookmark = await this.api.getRaindrop(raindropId);
-		await this.updateFileContent(file, bookmark);
+		const shouldFetchFullText =
+			this.plugin.settings.enableFullTextSync && !this.plugin.settings.enableAppendMode;
+		const hydratedBookmark = await this.attachFullText(bookmark, shouldFetchFullText);
+		await this.updateFileContent(file, hydratedBookmark);
 		// Do not perform path sync here!
 		// Since we do not know which collection sync this bookmark (e.g. bookmark "b1" in "Collection 1" may also be synced if you enable "All Bookmarks" collection), which leads to ambiguity.
 		new Notice(`Sync ${bookmark.title} completed`);
@@ -234,15 +238,20 @@ export default class RaindropSync {
 			}
 
 			const file = bookmarkFilesMap[bookmark.id];
+			const shouldFetchFullText =
+				this.plugin.settings.enableFullTextSync &&
+				(!file || !this.plugin.settings.enableAppendMode);
+			const hydratedBookmark = await this.attachFullText(bookmark, shouldFetchFullText);
+
 			if (file) {
-				await this.updateFileContent(file, bookmark);
+				await this.updateFileContent(file, hydratedBookmark);
 				if (this.plugin.settings.enablePreventMovingExistingFiles === false) {
-					await this.updateFileName(file, bookmark, folderPath);
+					await this.updateFileName(file, hydratedBookmark, folderPath);
 				}
 			} else {
-				const renderedFilename = this.renderer.renderFileName(bookmark, true);
+				const renderedFilename = this.renderer.renderFileName(hydratedBookmark, true);
 				const filePath = await this.buildNonDupFilePath(folderPath, renderedFilename);
-				bookmarkFilesMap[bookmark.id] = await this.createFile(filePath, bookmark);
+				bookmarkFilesMap[bookmark.id] = await this.createFile(filePath, hydratedBookmark);
 			}
 		}
 	}
@@ -359,6 +368,28 @@ export default class RaindropSync {
 		console.debug("create file", filePath);
 		const mdContent = this.renderer.renderFullArticle(bookmark);
 		return this.app.vault.create(filePath, mdContent);
+	}
+
+	private async attachFullText(
+		bookmark: RaindropBookmark,
+		shouldFetch: boolean,
+	): Promise<RaindropBookmark> {
+		if (!shouldFetch) return bookmark;
+
+		try {
+			const html = await this.api.getPermanentCopyHtml(bookmark.id);
+			const markdown = extractArticleMarkdown(html, bookmark.link);
+			if (markdown) {
+				bookmark.fullText = markdown;
+			}
+		} catch (error) {
+			console.warn(
+				`Failed to fetch permanent copy for raindrop ${bookmark.id}: ${bookmark.link}`,
+				error,
+			);
+		}
+
+		return bookmark;
 	}
 
 	private getBookmarkFiles(): BookmarkFile[] {

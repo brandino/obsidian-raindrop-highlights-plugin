@@ -54,6 +54,7 @@ export class RaindropSettingTab extends PluginSettingTab {
 		this.syncDeleteFiles();
 		this.syncDeleteUseTrash();
 		this.appendMode();
+		this.fullTextSync();
 		this.template();
 		this.metadataTemplate();
 		this.highlightsFolder();
@@ -88,6 +89,21 @@ export class RaindropSettingTab extends PluginSettingTab {
 				return toggle.setValue(this.settings.enableAppendMode).onChange(async (value) => {
 					await this.settings.setEnableAppendMode(value);
 				});
+			});
+	}
+
+	private fullTextSync(): void {
+		new Setting(this.containerEl)
+			.setName("Sync full article text (Raindrop Pro)")
+			.setDesc(
+				"Fetches the permanent copy and converts it to markdown using Readability. This can slow syncing and may not work for every site.",
+			)
+			.addToggle((toggle) => {
+				return toggle
+					.setValue(this.settings.enableFullTextSync)
+					.onChange(async (value) => {
+						await this.settings.setEnableFullTextSync(value);
+					});
 			});
 	}
 
