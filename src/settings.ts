@@ -277,6 +277,15 @@ export class RaindropPluginSettings {
 		await this.save();
 	}
 
+	get enableFullTextSync() {
+		return this._settings.fullTextSync;
+	}
+
+	async setEnableFullTextSync(value: boolean) {
+		this._settings.fullTextSync = value;
+		await this.save();
+	}
+
 	get enableAutoSyncAllCollections() {
 		return this._settings.autoSyncAllCollections;
 	}

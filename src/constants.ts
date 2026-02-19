@@ -26,6 +26,7 @@ export const DEFAULT_SETTINGS: ZPluginSettingsType = {
 	preventMovingExistingFiles: true,
 	autoSyncInterval: 0,
 	autoescape: true,
+	fullTextSync: false,
 };
 
 export const SYSTEM_COLLECTIONS: RaindropCollection[] = [

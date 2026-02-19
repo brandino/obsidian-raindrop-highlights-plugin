@@ -31,6 +31,7 @@ type RenderTemplate = {
 	note: string;
 	link: string;
 	highlights: RenderHighlight[];
+	fullText: string;
 	collection: RenderCollection;
 	tags: string[];
 	cover: string;
@@ -59,6 +60,7 @@ const FAKE_RENDER_CONTEXT: RenderTemplate = {
 			text: "fake_text",
 		},
 	],
+	fullText: "fake_full_text",
 	collection: {
 		title: "fake_collection",
 	},
@@ -154,11 +156,11 @@ ${fakeContent}`;
 				color: hl.color,
 				created: Moment(hl.created),
 				lastUpdate: Moment(hl.lastUpdate),
-				note: hl.note,
-				text: hl.text,
-			};
-			return renderHighlight;
-		});
+			note: hl.note,
+			text: hl.text,
+		};
+		return renderHighlight;
+	});
 
 		// the latest collection data is sync from Raindrop at the beginning of `sync` function
 		const renderCollection: RenderCollection = {
@@ -173,6 +175,7 @@ ${fakeContent}`;
 			note: bookmark.note,
 			link: bookmark.link,
 			highlights: renderHighlights,
+			fullText: bookmark.fullText ?? "",
 			collection: renderCollection,
 			tags: bookmark.tags,
 			cover: bookmark.cover,

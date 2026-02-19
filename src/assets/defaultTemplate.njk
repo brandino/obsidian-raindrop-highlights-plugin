@@ -8,6 +8,11 @@
 
 {% if excerpt %}{{excerpt}}{% endif %}
 
+{% if fullText %}
+## Article
+{{fullText}}
+{% endif %}
+
 ## Highlights
 {% endif -%}{% for highlight in highlights %}
 {% if highlight.color == "red" -%}

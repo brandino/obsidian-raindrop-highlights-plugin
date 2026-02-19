@@ -147,6 +147,34 @@ export class RaindropAPI {
 		return result.data;
 	}
 
+	private async getText(url: string, params: Record<string, unknown>) {
+		const token = this.tokenManager.get();
+		if (!token) {
+			throw new Error("Invalid token");
+		}
+
+		const result = await axios.get(url, {
+			params: params,
+			responseType: "text",
+			transformResponse: (data) => data,
+			headers: {
+				Authorization: `Bearer ${token}`,
+				"Content-Type": "application/json",
+			},
+		});
+
+		if (result.status == 401) {
+			throw new Error("Unauthorized");
+		}
+
+		if (result.status !== 200) {
+			console.error("Raindrop API request failed:", result);
+			throw new Error("Request failed");
+		}
+
+		return result.data as string;
+	}
+
 	async getCollections(enableCollectionGroup: boolean): Promise<RaindropCollection[]> {
 		const [rawRootCollections, rawNestedCollections] = await Promise.all([
 			this.get(`${BASEURL}/collections`, {}),
@@ -307,6 +335,10 @@ export class RaindropAPI {
 		const res = await this.get(`${BASEURL}/raindrop/${id}`, {});
 		const bookmark = this.parseRaindrop(ZRaindrop.parse(res.item));
 		return bookmark;
+	}
+
+	async getPermanentCopyHtml(id: number): Promise<string> {
+		return this.getText(`${BASEURL}/raindrop/${id}/cache`, {});
 	}
 
 	private parseRaindrops(bookmarks: TZRaindrop[]): RaindropBookmark[] {

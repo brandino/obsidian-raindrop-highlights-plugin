@@ -58,6 +58,7 @@ export interface RaindropBookmark {
 	type: string;
 	important: boolean;
 	creator: RaindropCreatorRef;
+	fullText?: string;
 }
 
 // ----------
@@ -109,6 +110,7 @@ export const ZPluginSettings = z.object({
 	preventMovingExistingFiles: z.boolean().optional().default(true),
 	autoSyncInterval: z.number().optional().default(0),
 	autoescape: z.boolean().optional().default(true),
+	fullTextSync: z.boolean().optional().default(false),
 });
 
 export type ZPluginSettingsType = z.infer<typeof ZPluginSettings>;
